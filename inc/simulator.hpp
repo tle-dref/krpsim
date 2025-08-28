@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 
 struct Process {
@@ -20,16 +21,24 @@ struct Event {
 };
 
 class Simulator {
-private:
-	std::unordered_map<std::string, int> stocks; 
+	private:
+	std::unordered_map<std::string, int> stocks;
 	std::vector<Process> processes;
-	std::vector<Event> trace; 
-	int maxDelay;
+	std::vector<Event> trace;
+	std::vector<std::string> optimize;
+	// int maxDelay;
 
 public:
 	Simulator(const std::string& filename, int delay);
+	~Simulator();
 
 	void parseFile(const std::string& filename);
 	void run();
 	void displayTrace() const;
+
+	int addStock(std::string line);
 };
+
+
+
+int addProcess(std::string line);

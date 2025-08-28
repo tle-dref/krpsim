@@ -13,7 +13,7 @@
 NAME = krpsim
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++23
+CXXFLAGS = -Wall -Wextra -Werror -std=c++2b -Iinc
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 
