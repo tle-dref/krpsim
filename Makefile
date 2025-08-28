@@ -12,22 +12,37 @@
 
 NAME = krpsim
 
+
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++23
 SRC = $(wildcard src/*.cpp)
-OBJ = $(SRC:.cpp=.o)
+OBJDIR = obj
+OBJ = $(SRC:src/%.cpp=$(OBJDIR)/%.o)
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
+
+$(NAME): $(OBJDIR) $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ)
 
+
 clean:
-	rm -f $(OBJ)
+	rm -rf $(OBJDIR)
+
 
 fclean: clean
 	rm -f $(NAME)
 
+
 re: fclean all
 
+
 .PHONY: all clean fclean re
+
+# Compilation des .cpp en .o dans obj/
+$(OBJDIR)/%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@

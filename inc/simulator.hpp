@@ -27,9 +27,16 @@ private:
 	int maxDelay;
 
 public:
-	Simulator(const std::string& filename, int delay);
+	// Simulator(const std::string& filename, int delay);
+	Simulator(void);
+	~Simulator(void);
 
-	void parseFile(const std::string& filename);
-	void run();
-	void displayTrace() const;
+	// void parseFile(const std::string& filename);
+	// void run();
+	// void displayTrace() const;
+	std::unordered_map<std::string, int>	getStocks(void);
+	std::vector<Process>					getProcesses(void);
+	std::vector<Event>						getTrace(void);
+	int										getMaxDelay(void);
+
 };
