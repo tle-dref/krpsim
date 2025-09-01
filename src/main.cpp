@@ -1,4 +1,4 @@
-#include "../inc/simulator.hpp"
+#include "simulator.hpp"
 
 struct ProcDoMontant {
 	std::string name = "do_montant";
@@ -31,14 +31,7 @@ struct ProcDoArmoireIkea {
 
 int	main(void)
 {
-	Simulator sim = Simulator();
-	ProcDoMontant 		do_montant;
-	ProcDoFond 			do_fond;
-	ProcDoEtagere 		do_etagere;
-	ProcDoArmoireIkea 	do_armoire_ikea;
-	std::vector<std::string> optimize = {"time", "armoire"};
-	std::unordered_map<std::string, int> stocks = {{"planche", 7}};
-
-
-	return(0);
+	Simulator sim("configs/pomme", 100);  // Parse le fichier complet
+	sim.displayAll();  // Affiche tout le contenu parsé
+	return 0;
 }
