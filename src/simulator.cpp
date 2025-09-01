@@ -6,6 +6,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
+#include <vector>
 
 std::string trim(const std::string& str) {
 	size_t start = str.find_first_not_of(" \t\n\r");
@@ -26,7 +28,9 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
 
 Simulator::Simulator(const std::string& filename, int delay) {
 	(void)delay;
-	parseFile(filename);
+	if (!filename.empty()) {
+		parseFile(filename);
+	}
 }
 
 Simulator::~Simulator() {
@@ -38,9 +42,47 @@ void Simulator::run() {
 void Simulator::displayTrace() const {
 }
 
-int addOptimize(std::string line) {
-	(void)line;
-	return 0;
+void Simulator::displayAll() const {
+	std::cout << "=== STOCKS ===" << std::endl;
+	for (const auto& stock : stocks) {
+		std::cout << stock.first << ": " << stock.second << std::endl;
+	}
+	
+	std::cout << "\n=== PROCESSES ===" << std::endl;
+	for (const auto& process : processes) {
+		std::cout << "Name: " << process.name << std::endl;
+		std::cout << "Delay: " << process.delay << std::endl;
+		std::cout << "Needs: ";
+		for (const auto& need : process.needs) {
+			std::cout << need.first << ":" << need.second << " ";
+		}
+		std::cout << std::endl;
+		std::cout << "Results: ";
+		for (const auto& result : process.results) {
+			std::cout << result.first << ":" << result.second << " ";
+		}
+		std::cout << std::endl << std::endl;
+	}
+	
+	std::cout << "\n=== OPTIMIZATIONS ===" << std::endl;
+	for (const auto& opt : optimize) {
+		std::cout << opt << std::endl;
+	}
+}
+
+int Simulator::addOptimize(std::string line) {
+	line = trim(line);
+	if (line.find("optimize:(") == 0 && line.back() == ')') {
+		size_t start = line.find('(') + 1;
+		size_t end = line.find(')', start);
+		if (end != std::string::npos) {
+			std::string target = line.substr(start, end - start);
+			target = trim(target);
+			this->optimize.push_back(target);
+			return 0;
+		}
+	}
+	return -1;
 }
 
 bool is_digits(const std::string& str) {
@@ -49,8 +91,8 @@ bool is_digits(const std::string& str) {
 
 int Simulator::addStock(std::string line) {
 		line = trim(line);
-		char **tokens = split(line, ':');
-		if (!tokens || tokens[0] == nullptr || tokens[1] == nullptr) {
+		std::vector<std::string> tokens = split(line, ':');
+		if (tokens.size() < 2) {
 			std::cerr << "Invalid line format: " << line << std::endl;
 			return -1;
 		}
@@ -63,9 +105,36 @@ int Simulator::addStock(std::string line) {
 		return -1;
 }
 
+std::unordered_map<std::string, int> parseNeeds(const std::string& str) {
+	std::unordered_map<std::string, int> needs;
+	std::vector<std::string> tokens = split(str, ';');
+	for (const std::string& token : tokens) {
+		std::vector<std::string> pair = split(token, ':');
+		if (pair.size() == 2 && is_digits(pair[1])) {
+			needs[trim(pair[0])] = std::stoi(trim(pair[1]));
+		}
+	}
+	return needs;
+}
+
+std::unordered_map<std::string, int> parseResults(const std::string& str) {
+	std::unordered_map<std::string, int> results;
+	std::vector<std::string> tokens = split(str, ';');
+	for (const std::string& token : tokens) {
+		std::vector<std::string> pair = split(token, ':');
+		if (pair.size() == 2 && is_digits(pair[1])) {
+			results[trim(pair[0])] = std::stoi(trim(pair[1]));
+		}
+	}
+	return results;
+}
+
 //<name>:(<need>:<qty>;<need>:<qty>):(<result>:<qty>;<result>:<qty>):<nb_cycle>
-int addProcess(std::string line)
+int Simulator::addProcess(std::string line)
 {
+	if (line.find("optimize:") == 0) {
+		return -1;
+	}
 	std::string name, needs, results;
 	int nb_cycle;
 	char skip;
@@ -81,11 +150,13 @@ int addProcess(std::string line)
 	needs = trim(needs);
 	results = trim(results);
 
+	Process process;
+	process.name = name;
+	process.needs = parseNeeds(needs);
+	process.results = parseResults(results);
+	process.delay = nb_cycle;
+	this->processes.push_back(process);
 
-	// std::cout << "Nom: " << name << std::endl;
-    // std::cout << "Besoins: " << needs << std::endl;
-    // std::cout << "Résultats: " << results << std::endl;
-    // std::cout << "Cycles: " << nb_cycle << std::endl;
 	return 0;
 }
 
@@ -98,7 +169,7 @@ void Simulator::parseFile(const std::string& filename) {
 
 	int parsing_step = 0;
 	std::string line;
-	while (std::getline(file, line)) {
+	while (std::getline(file, line) && parsing_step != 3) {
 		if (line.empty() || line[0] == '#') {
 			continue;
 		}
@@ -107,11 +178,13 @@ void Simulator::parseFile(const std::string& filename) {
 			if (addStock(line) == -1) {
 				parsing_step = 1;
 			}
-		} else if (parsing_step == 1) {
+		}
+		if (parsing_step == 1) {
 			if (addProcess(line) == -1) {
 				parsing_step = 2;
 			}
-		} else if (parsing_step == 2) {
+		}
+		if (parsing_step == 2) {
 			if (addOptimize(line) == -1) {
 				parsing_step = 3;
 			}
