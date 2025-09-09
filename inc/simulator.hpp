@@ -1,10 +1,15 @@
 #pragma once
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <sstream>
-
+# include <iostream>
+# include <string>
+# include <vector>
+# include <unordered_map>
+# include <sstream>
+# include <fstream>
+# include <algorithm>
+# include <cctype>
+# include <cstdlib>
+# include <cstring>
+# include "utils.hpp"
 
 struct Process {
 	std::string name;
@@ -29,35 +34,21 @@ class Simulator {
 	std::vector<std::string> optimize;
 	// int maxDelay;
 
-public:
-	// Simulator(const std::string& filename, int delay);
-	Simulator(void);
-	~Simulator(void);
+	public:
+		Simulator(const std::string& filename, int delay);
+		~Simulator();
 
-	// void parseFile(const std::string& filename);
-	// void run();
-	// void displayTrace() const;
-	std::unordered_map<std::string, int>	getStocks(void);
-	std::vector<Process>					getProcesses(void);
-	std::vector<Event>						getTrace(void);
-	int										getMaxDelay(void);
+		void parseFile(const std::string& filename);
+		void run();
+		void displayTrace() const;
+		void displayStock() const;
+		void displayAll() const;
 
-	Simulator(const std::string& filename, int delay);
-	~Simulator();
-
-	void parseFile(const std::string& filename);
-	void run();
-	void displayTrace() const;
-	void displayAll() const;
-
-	int addStock(std::string line);
-	int addProcess(std::string line);
-	int addOptimize(std::string line);
+		int parseStock(std::string line);
+		int parseProcess(std::string line);
+		int parseOptimize(std::string line);
+		int execAllProcesses(void);
+		void	addToStock(std::unordered_map<std::string, int> itemsToAdd);
+		void	subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract);
 };
 
-// Utility functions
-std::string trim(const std::string& str);
-std::vector<std::string> split(const std::string& str, char delimiter);
-std::unordered_map<std::string, int> parseNeeds(const std::string& str);
-std::unordered_map<std::string, int> parseResults(const std::string& str);
-bool is_digits(const std::string& str);
