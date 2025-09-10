@@ -45,13 +45,10 @@ std::unordered_map<std::string, int> parseResults(const std::string& str) {
 	return results;
 }
 
-bool RequierementsForProcesses(const std::unordered_map<std::string, int>& needs, const std::unordered_map<std::string, int>& stocks)
-{
-    for (const auto& need : needs)
-    {
+bool RequierementsForProcesses(const std::unordered_map<std::string, int>& needs, const std::unordered_map<std::string, int>& stocks) {
+    for (const auto& need : needs) {
         auto it = stocks.find(need.first);
-        if (it == stocks.end() || it->second < need.second)
-        {
+        if (it == stocks.end() || it->second < need.second) {
             // std::cout << "Fail to find \033[32m" << need.first << "\033[0m in Stocks or bad \033[31mQuantity\033[0m" << std::endl;
             return false;
         }

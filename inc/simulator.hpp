@@ -32,7 +32,6 @@ class Simulator {
 	std::vector<Process> processes;
 	std::vector<Event> trace;
 	std::vector<std::string> optimize;
-	// int maxDelay;
 
 	public:
 		Simulator(const std::string& filename, int delay);

@@ -152,13 +152,14 @@ void	Simulator::addToStock(std::unordered_map<std::string, int> itemsToAdd) {
 			this->stocks.insert(items);
 			std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
 		}
-		else 
+		else {
 			it->second += items.second;
+			std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
+		}
 	}
 }
 
-void	Simulator::subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract)
-{
+void	Simulator::subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract) {
 	for (const auto& items : itemsToSubtract) {
 		auto it = this->stocks.find(items.first);
 		if (it != this->stocks.end()) {
@@ -170,17 +171,20 @@ void	Simulator::subtractFromStock(std::unordered_map<std::string, int> itemsToSu
 	}
 }
 
-int	Simulator::execAllProcesses(void)
-{
-	for (const auto& process : this->processes)
+int	Simulator::execAllProcesses(void) {
+	while (1)
 	{
-		if (RequierementsForProcesses(process.needs, this->stocks) == true)
-		{
-			std::cout <<"\033[34m" << process.name << "\033[0m SUCCESS" << std::endl;
-			addToStock(process.results);
-			subtractFromStock(process.needs);
-			displayStock();
-			return(1);
+		auto it = stocks.find("euro");
+		if (it->second <= 0)
+			exit(0);
+		for (const auto& process : this->processes) {
+			if (RequierementsForProcesses(process.needs, this->stocks) == true) {
+				std::cout <<"\033[34m" << process.name << "\033[0m SUCCESS" << std::endl;
+				addToStock(process.results);
+				subtractFromStock(process.needs);
+				displayStock();
+				// return(1);
+			}
 		}
 	}
 	return (0);
