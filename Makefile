@@ -9,40 +9,31 @@
 #    Updated: 2025/08/28 00:00:00 by tle-dref         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
-
 NAME = krpsim
 
-
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++2b -Iinc
+CXXFLAGS = -Wall -Wextra -Werror -std=c++23 -Iinc
 SRC = $(wildcard src/*.cpp)
-OBJDIR = obj
-OBJ = $(SRC:src/%.cpp=$(OBJDIR)/%.o)
+OBJ_DIR = obj
+OBJ = $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
+$(NAME): $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
+$(OBJ_DIR)/%.o: src/%.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
 all: $(NAME)
 
-
-$(NAME): $(OBJDIR) $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ)
-
-
 clean:
-	rm -rf $(OBJDIR)
-
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	rm -f $(NAME)
 
-
 re: fclean all
 
-
 .PHONY: all clean fclean re
-
-# Compilation des .cpp en .o dans obj/
-$(OBJDIR)/%.o: src/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@

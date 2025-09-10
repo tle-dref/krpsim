@@ -175,8 +175,10 @@ int	Simulator::execAllProcesses(void) {
 	while (1)
 	{
 		auto it = stocks.find("euro");
-		if (it->second <= 0)
+		if (it->second <= 0) {
+			std::cout << "END SIMULATION" << std::endl;
 			exit(0);
+		}
 		for (const auto& process : this->processes) {
 			if (RequierementsForProcesses(process.needs, this->stocks) == true) {
 				std::cout <<"\033[34m" << process.name << "\033[0m SUCCESS" << std::endl;
