@@ -19,6 +19,7 @@ struct Process {
 	int delay;
 	int startTime = -1;
 	int finishTime = -1;
+
 };
 
 struct Event {
@@ -26,11 +27,16 @@ struct Event {
 	std::string process;
 };
 
+struct State {
+	int time;
+	std::unordered_map<std::string, int> stocks;
+	std::vector<Event> trace;
+};
+
 class Simulator {
 	private:
 	std::unordered_map<std::string, int> stocks;
-	std::vector<Process> processes;
-	std::vector<Event> trace;
+	std::vector<Process *> processes;
 	std::vector<std::string> optimize;
 
 	public:
@@ -49,5 +55,9 @@ class Simulator {
 		int execAllProcesses(void);
 		void	addToStock(std::unordered_map<std::string, int> itemsToAdd);
 		void	subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract);
+		std::vector<Process *>	getExecutableProcesses(const State &state, const std::vector<Process *> &Processes);
+		std::vector<State> expandState(const State& s, const std::vector<Process *>& processes);
+		State applyProcess(const State& current, const Process& p);
+		int	launchSimulator(void);
 };
 

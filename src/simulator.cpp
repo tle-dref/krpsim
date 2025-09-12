@@ -8,6 +8,9 @@ Simulator::Simulator(const std::string& filename, int delay) {
 }
 
 Simulator::~Simulator() {
+	for (const auto& p : this->processes) {
+		free(p);
+	}
 }
 
 void Simulator::run() {
@@ -31,15 +34,15 @@ void Simulator::displayAll() const {
 	
 	std::cout << "\n=== PROCESSES ===" << std::endl;
 	for (const auto& process : processes) {
-		std::cout << "Name: " << process.name << std::endl;
-		std::cout << "Delay: " << process.delay << std::endl;
+		std::cout << "Name: " << process->name << std::endl;
+		std::cout << "Delay: " << process->delay << std::endl;
 		std::cout << "Needs: ";
-		for (const auto& need : process.needs) {
+		for (const auto& need : process->needs) {
 			std::cout << need.first << ":" << need.second << " ";
 		}
 		std::cout << std::endl;
 		std::cout << "Results: ";
-		for (const auto& result : process.results) {
+		for (const auto& result : process->results) {
 			std::cout << result.first << ":" << result.second << " ";
 		}
 		std::cout << std::endl << std::endl;
@@ -103,11 +106,11 @@ int Simulator::parseProcess(std::string line)
 	needs = trim(needs);
 	results = trim(results);
 
-	Process process;
-	process.name = name;
-	process.needs = parseNeeds(needs);
-	process.results = parseResults(results);
-	process.delay = nb_cycle;
+	Process *process = new Process();
+	process->name = name;
+	process->needs = parseNeeds(needs);
+	process->results = parseResults(results);
+	process->delay = nb_cycle;
 	this->processes.push_back(process);
 
 	return 0;
@@ -180,10 +183,10 @@ int	Simulator::execAllProcesses(void) {
 			exit(0);
 		}
 		for (const auto& process : this->processes) {
-			if (RequierementsForProcesses(process.needs, this->stocks) == true) {
-				std::cout <<"\033[34m" << process.name << "\033[0m SUCCESS" << std::endl;
-				addToStock(process.results);
-				subtractFromStock(process.needs);
+			if (RequierementsForProcesses(process->needs, this->stocks) == true) {
+				std::cout <<"\033[34m" << process->name << "\033[0m SUCCESS" << std::endl;
+				addToStock(process->results);
+				subtractFromStock(process->needs);
 				displayStock();
 				// return(1);
 			}
@@ -191,3 +194,88 @@ int	Simulator::execAllProcesses(void) {
 	}
 	return (0);
 }
+
+int	Simulator::launchSimulator(void) {
+	std::vector<Event> trace;
+	std::vector<State> state;
+
+	state = expandState({0, this->stocks, trace}, this->processes);
+	for (const auto &s : state) {
+		for (const auto &trace : s.trace) {
+			std::cout << trace.process << std::endl;
+		}
+	}
+	return (0);
+}
+
+std::vector<Process *>	Simulator::getExecutableProcesses(const State &state, const std::vector<Process *> &Processes) {
+	std::vector<Process *> valid_process;
+	
+	for (const auto& process : Processes) {
+		bool is_valid = true;
+		for (const auto& need : process->needs) {
+			auto it = state.stocks.find(need.first);
+			if (it == state.stocks.end() || it->second < need.second) {
+				is_valid = false;
+				break ;
+			}
+		}
+		if (is_valid == true) {
+			valid_process.push_back(process);
+		}
+	}
+	return (valid_process);
+}
+
+State Simulator::applyProcess(const State& current, const Process& p) {
+    State next = current;
+    
+    for (auto& need : p.needs) {
+        next.stocks[need.first] -= need.second;
+    }
+
+	for (auto& res : p.results) {
+        next.stocks[res.first] += res.second;
+    }
+
+    next.time += p.delay;
+
+    next.trace.push_back({next.time, p.name});
+    return next;
+}
+
+std::vector<State> Simulator::expandState(const State& s, const std::vector<Process *>& processes) {
+    std::vector<State> nextStates;
+    auto choices = getExecutableProcesses(s, processes);
+    for (auto* p : choices) {
+        nextStates.push_back(applyProcess(s, *p));
+    }
+    return nextStates;
+}
+
+
+// 
+// void launchExpand(const State& current, const std::vector<Process>& processes) {
+    // std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===\n";
+// 
+    // auto nextStates = expandState(current, processes);
+// 
+    // if (nextStates.empty()) {
+        // std::cout << "Aucun processus exécutable depuis cet état.\n";
+        // return;
+    // }
+// 
+    // int i = 0;
+    // for (const auto& ns : nextStates) {
+        // std::cout << "Option " << i++ << " : après process " 
+                //   << ns.trace.back().process 
+                //   << " (temps = " << ns.time << ")\n";
+// 
+        afficher stocks pour debug
+        // std::cout << "Stocks : ";
+        // for (auto& kv : ns.stocks) {
+            // std::cout << kv.first << "=" << kv.second << " ";
+        // }
+        // std::cout << "\n";
+    // }
+// }
