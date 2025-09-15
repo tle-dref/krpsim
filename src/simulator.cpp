@@ -120,7 +120,7 @@ void Simulator::parseFile(const std::string& filename) {
 	std::ifstream file(filename);
 	if (!file) {
 		std::cerr << "Error opening file: " << filename << std::endl;
-		return;
+		exit(0); // a changer
 	}
 
 	int parsing_step = 0;
@@ -220,7 +220,7 @@ std::vector<State> Simulator::expandState(const State& s, const std::vector<Proc
 void Simulator::launchExpand(const State& current, const std::vector<Process *>& processes) {
     std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===\n";
 
-    auto nextStates = this->expandState(current, processes);
+    std::vector<State> nextStates = this->expandState(current, processes);
 
     if (nextStates.empty()) {
         std::cout << "Aucun processus exécutable depuis cet état.\n";
@@ -241,10 +241,21 @@ void Simulator::launchExpand(const State& current, const std::vector<Process *>&
     }
 }
 
+State	Simulator::isBetter(const State &state1, const State &state2, const std::string &optimise) {
+	(void)state2;
+	(void)optimise;
+	auto it1 = state1.stocks.find(optimise);
+
+	std::cout << it1->first << ", " << it1->second << std::endl;
+	return (state1);
+}
+
 int	Simulator::launchSimulator(void) {
 	std::vector<Event> trace;
-	State state = {0, this->stocks, trace};
+	State state1 = {0, this->stocks, trace};
+	State state2 = {20, this->stocks, trace};
 
-	launchExpand(state, this->processes);
+	// launchExpand(state, this->processes);
+	isBetter(state1, state2, "euro");
 	return (0);
 }
