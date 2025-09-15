@@ -52,12 +52,13 @@ class Simulator {
 		int parseStock(std::string line);
 		int parseProcess(std::string line);
 		int parseOptimize(std::string line);
-		int execAllProcesses(void);
-		void	addToStock(std::unordered_map<std::string, int> itemsToAdd);
-		void	subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract);
+
+		void	addToStock(State *s, std::unordered_map<std::string, int> itemsToAdd);
+		void	subtractFromStock(State *s, std::unordered_map<std::string, int> itemsToSubtract);
 		std::vector<Process *>	getExecutableProcesses(const State &state, const std::vector<Process *> &Processes);
 		std::vector<State> expandState(const State& s, const std::vector<Process *>& processes);
-		State applyProcess(const State& current, const Process& p);
-		int	launchSimulator(void);
+		State 	applyProcess(const State& current, const Process& p);
+		int		launchSimulator(void);
+		void	launchExpand(const State& current, const std::vector<Process *>& processes);
 };
 

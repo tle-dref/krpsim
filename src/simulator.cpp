@@ -148,64 +148,30 @@ void Simulator::parseFile(const std::string& filename) {
 	}
 }
 
-void	Simulator::addToStock(std::unordered_map<std::string, int> itemsToAdd) {
+void	Simulator::addToStock(State *s,std::unordered_map<std::string, int> itemsToAdd) {
 	for (const auto& items : itemsToAdd) {
-		auto it = this->stocks.find(items.first);
-		if (it == this->stocks.end()) {
-			this->stocks.insert(items);
-			std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
+		auto it = s->stocks.find(items.first);
+		if (it == s->stocks.end()) {
+			s->stocks.insert(items);
+			// std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
 		}
 		else {
 			it->second += items.second;
-			std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
+			// std::cout << "Added \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
 		}
 	}
 }
 
-void	Simulator::subtractFromStock(std::unordered_map<std::string, int> itemsToSubtract) {
+void	Simulator::subtractFromStock(State *s, std::unordered_map<std::string, int> itemsToSubtract) {
 	for (const auto& items : itemsToSubtract) {
-		auto it = this->stocks.find(items.first);
-		if (it != this->stocks.end()) {
+		auto it = s->stocks.find(items.first);
+		if (it != s->stocks.end()) {
 			it->second -= items.second;
-			std::cout << "Remove \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
+			// std::cout << "Remove \033[31m" << items.second << " \033[32m" << items.first << "\033[0m to stocks" << std::endl;
 		}
-		else
-			std::cout << "ERROR no items from stock to remove" << items.first << " | " << items.second << std::endl;
+		// else
+			// std::cout << "ERROR no items from stock to remove" << items.first << " | " << items.second << std::endl;
 	}
-}
-
-int	Simulator::execAllProcesses(void) {
-	while (1)
-	{
-		auto it = stocks.find("euro");
-		if (it->second <= 0) {
-			std::cout << "END SIMULATION" << std::endl;
-			exit(0);
-		}
-		for (const auto& process : this->processes) {
-			if (RequierementsForProcesses(process->needs, this->stocks) == true) {
-				std::cout <<"\033[34m" << process->name << "\033[0m SUCCESS" << std::endl;
-				addToStock(process->results);
-				subtractFromStock(process->needs);
-				displayStock();
-				// return(1);
-			}
-		}
-	}
-	return (0);
-}
-
-int	Simulator::launchSimulator(void) {
-	std::vector<Event> trace;
-	std::vector<State> state;
-
-	state = expandState({0, this->stocks, trace}, this->processes);
-	for (const auto &s : state) {
-		for (const auto &trace : s.trace) {
-			std::cout << trace.process << std::endl;
-		}
-	}
-	return (0);
 }
 
 std::vector<Process *>	Simulator::getExecutableProcesses(const State &state, const std::vector<Process *> &Processes) {
@@ -227,55 +193,58 @@ std::vector<Process *>	Simulator::getExecutableProcesses(const State &state, con
 	return (valid_process);
 }
 
-State Simulator::applyProcess(const State& current, const Process& p) {
+State Simulator::applyProcess(const State& current, const Process& process) {
     State next = current;
     
-    for (auto& need : p.needs) {
-        next.stocks[need.first] -= need.second;
-    }
+	subtractFromStock(&next, process.needs);
 
-	for (auto& res : p.results) {
-        next.stocks[res.first] += res.second;
-    }
+	addToStock(&next, process.results);
 
-    next.time += p.delay;
+    next.time += process.delay;
 
-    next.trace.push_back({next.time, p.name});
+    next.trace.push_back({next.time, process.name});
     return next;
 }
 
 std::vector<State> Simulator::expandState(const State& s, const std::vector<Process *>& processes) {
     std::vector<State> nextStates;
+
     auto choices = getExecutableProcesses(s, processes);
     for (auto* p : choices) {
         nextStates.push_back(applyProcess(s, *p));
     }
+
     return nextStates;
 }
 
+void Simulator::launchExpand(const State& current, const std::vector<Process *>& processes) {
+    std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===\n";
 
-// 
-// void launchExpand(const State& current, const std::vector<Process>& processes) {
-    // std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===\n";
-// 
-    // auto nextStates = expandState(current, processes);
-// 
-    // if (nextStates.empty()) {
-        // std::cout << "Aucun processus exécutable depuis cet état.\n";
-        // return;
-    // }
-// 
-    // int i = 0;
-    // for (const auto& ns : nextStates) {
-        // std::cout << "Option " << i++ << " : après process " 
-                //   << ns.trace.back().process 
-                //   << " (temps = " << ns.time << ")\n";
-// 
-        afficher stocks pour debug
-        // std::cout << "Stocks : ";
-        // for (auto& kv : ns.stocks) {
-            // std::cout << kv.first << "=" << kv.second << " ";
-        // }
-        // std::cout << "\n";
-    // }
-// }
+    auto nextStates = this->expandState(current, processes);
+
+    if (nextStates.empty()) {
+        std::cout << "Aucun processus exécutable depuis cet état.\n";
+        return;
+    }
+
+    int i = 0;
+    for (const auto& nextState : nextStates) {
+        std::cout << "Option " << i++ << " : après process " << nextState.trace.back().process 
+                  << " (temps = " << nextState.time << ")\n";
+
+        // afficher stocks pour debug
+        std::cout << "Stocks : ";
+        for (auto& kv : nextState.stocks) {
+            std::cout << kv.first << "=" << kv.second << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
+int	Simulator::launchSimulator(void) {
+	std::vector<Event> trace;
+	State state = {0, this->stocks, trace};
+
+	launchExpand(state, this->processes);
+	return (0);
+}
