@@ -218,44 +218,49 @@ std::vector<State> Simulator::expandState(const State& s, const std::vector<Proc
 }
 
 void Simulator::launchExpand(const State& current, const std::vector<Process *>& processes) {
-    std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===\n";
+    std::cout << "\n=== Expansion de l'état au temps " << current.time << " ===" << std::endl;
 
-    std::vector<State> nextStates = this->expandState(current, processes);
+    std::vector<State> nextStates = expandState(current, processes);
 
     if (nextStates.empty()) {
-        std::cout << "Aucun processus exécutable depuis cet état.\n";
+        std::cout << "Aucun processus exécutable depuis cet état." << std::endl;
         return;
     }
 
     int i = 0;
     for (const auto& nextState : nextStates) {
         std::cout << "Option " << i++ << " : après process " << nextState.trace.back().process 
-                  << " (temps = " << nextState.time << ")\n";
+                  << " (temps = " << nextState.time << ")" << std::endl;
 
         // afficher stocks pour debug
         std::cout << "Stocks : ";
         for (auto& kv : nextState.stocks) {
             std::cout << kv.first << "=" << kv.second << " ";
         }
-        std::cout << "\n";
+		std::cout << std::endl;
     }
 }
 
-State	Simulator::isBetter(const State &state1, const State &state2, const std::string &optimise) {
-	(void)state2;
-	(void)optimise;
-	auto it1 = state1.stocks.find(optimise);
-
-	std::cout << it1->first << ", " << it1->second << std::endl;
-	return (state1);
+bool Simulator::isBetter(const State &s1, const State &s2, const std::string &optimizeKey) {
+    auto it1 = s1.stocks.find(optimizeKey);
+    auto it2 = s2.stocks.find(optimizeKey);
+    int v1 = (it1 != s1.stocks.end()) ? it1->second : 0;
+    int v2 = (it2 != s2.stocks.end()) ? it2->second : 0;
+    return v1 > v2;
 }
+
 
 int	Simulator::launchSimulator(void) {
 	std::vector<Event> trace;
+	std::vector<State> states;
 	State state1 = {0, this->stocks, trace};
 	State state2 = {20, this->stocks, trace};
 
-	// launchExpand(state, this->processes);
-	isBetter(state1, state2, "euro");
+	launchExpand(state1, this->processes);
+	states = expandState(state1, this->processes);
+	for (auto &state : states) {
+		launchExpand(state, this->processes);
+	}
+
 	return (0);
 }

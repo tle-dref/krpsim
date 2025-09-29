@@ -60,6 +60,7 @@ class Simulator {
 		State 	applyProcess(const State& current, const Process& p);
 		int		launchSimulator(void);
 		void	launchExpand(const State& current, const std::vector<Process *>& processes);
-		State	isBetter(const State &state1, const State &state2, const std::string &optimise);
+		bool 	isBetter(const State& s1, const State& s2, const std::string& optimizeKey);
+
 };
 
